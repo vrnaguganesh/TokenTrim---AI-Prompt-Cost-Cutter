@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TokenTrim - AI Prompt Optimizer</title>
+  <style>
+    :root {
+      --bg-base: #090a0f;
+      --bg-card: #12131a;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --border-focus: #4f46e5;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #4b5563;
+      --accent: #4f46e5;
+      --accent-glow: rgba(79, 70, 229, 0.15);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.08);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.08);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 350px;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      padding: 1rem;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      color: var(--accent);
+      font-size: 1.15rem;
+    }
+
+    .status-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    /* Status badge states */
+    .status-chatgpt {
+      background: rgba(16, 163, 127, 0.06);
+      border-color: rgba(16, 163, 127, 0.15);
+      color: #10a37f;
+    }
+    .status-chatgpt .status-dot { background: #10a37f; }
+
+    .status-claude {
+      background: rgba(217, 119, 95, 0.06);
+      border-color: rgba(217, 119, 95, 0.15);
+      color: #d9775f;
+    }
+    .status-claude .status-dot { background: #d9775f; }
+
+    .status-gemini {
+      background: rgba(59, 130, 246, 0.06);
+      border-color: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+    .status-gemini .status-dot { background: #3b82f6; }
+
+    /* Pill-Style Tabs */
+    .tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 2px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.35rem 0;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 0.75rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      outline: none;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    select:focus, input[type="text"]:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 5px var(--accent-glow);
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+
+    .checkbox-container input {
+      accent-color: var(--accent);
+      width: 13px;
+      height: 13px;
+      cursor: pointer;
+    }
+
+    /* Advanced Settings Details */
+    details {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.5rem 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    summary {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      outline: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details[open] summary {
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.3rem;
+    }
+
+    /* Minimalist File Drop Zone */
+    #drop-zone {
+      border: 1px dashed var(--border-color);
+      border-radius: 6px;
+      padding: 0.85rem;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.005);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    #drop-zone:hover {
+      border-color: var(--accent);
+      background: rgba(79, 70, 229, 0.02);
+    }
+
+    #drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(79, 70, 229, 0.06);
+    }
+
+    .upload-icon {
+      font-size: 1.15rem;
+      margin-bottom: 0.15rem;
+      color: var(--text-secondary);
+    }
+
+    .upload-title {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .upload-desc {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    /* Primary Action Button */
+    .btn {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 0.65rem;
+      transition: all 0.15s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.3rem;
+      font-family: var(--font-sans);
+    }
+
+    .btn:hover {
+      background: #4338ca;
+    }
+
+    .btn:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    /* Banner messages */
+    .banner {
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      margin-top: 0.65rem;
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    
+    .banner-error {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .banner-success {
+      background: var(--success-bg);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    /* Analytics Tab */
+    .slider-group {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      margin-bottom: 0.35rem;
+      color: var(--text-secondary);
+    }
+
+    .slider-val {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      background: rgba(255, 255, 255, 0.06);
+      height: 3px;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.45rem;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .metric-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    .metric-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .metric-sub {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .reduction-progress-container {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 2px;
+      margin-top: 0.15rem;
+      overflow: hidden;
+    }
+
+    .reduction-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* Diff / Changes Tab */
+    .diff-container {
+      background: rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 1.35;
+      height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .diff-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      text-align: center;
+      gap: 0.3rem;
+      padding: 0 0.5rem;
+    }
+
+    .diff-removed {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      text-decoration: line-through;
+      padding: 0 1px;
+      border-radius: 2px;
+    }
+
+    .diff-preserved {
+      color: #d1d5db;
+    }
+
+    /* Footer */
+    .footer {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 0.65rem;
+    }
+
+    .footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <span class="logo-icon">✂</span>
+      <span>TokenTrim</span>
+    </div>
+    <div class="status-badge" id="status-badge">
+      <span class="status-dot"></span>
+      <span id="status-text">Detecting Chat...</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="optimize">Optimizer</button>
+    <button class="tab-btn" data-tab="analytics" id="tab-analytics-btn">Savings</button>
+    <button class="tab-btn" data-tab="diff" id="tab-diff-btn">Changes</button>
+  </div>
+
+  <!-- 1. OPTIMIZER TAB -->
+  <div class="tab-panel active" id="panel-optimize">
+    <div class="form-group">
+      <label for="level">Compression Mode</label>
+      <select id="level">
+        <option value="conservative">Safe (Prune filler words)</option>
+        <option value="balanced" selected>Standard (Prune redundancies)</option>
+        <option value="aggressive">Deep (Prune words aggressively)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="target-model">AI Model (for math)</label>
+      <select id="target-model">
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+        <option value="gpt-4o" selected>GPT-4o</option>
+        <option value="gpt-4o-mini">GPT-4o-mini</option>
+        <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+        <option value="claude-3-haiku">Claude 3 Haiku</option>
+      </select>
+    </div>
+
+    <!-- Advanced Settings (Collapsible) -->
+    <details>
+      <summary>Advanced Options</summary>
+      <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="custom-keywords" style="font-size: 0.65rem;">Keep These Words Untouched</label>
+          <input type="text" id="custom-keywords" placeholder="e.g. databaseHost, queryVar" style="padding: 0.4rem 0.55rem; font-size: 0.75rem;">
+        </div>
+        <div class="form-group" style="margin-bottom: 0; padding-top: 0.25rem;">
+          <label class="checkbox-container" style="font-size: 0.72rem;">
+            <input type="checkbox" id="preserve" checked>
+            <span>Protect names & codes</span>
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <!-- File Drop Zone -->
+    <div class="form-group">
+      <label>Drag & Drop File</label>
+      <div id="drop-zone">
+        <div class="upload-icon">📁</div>
+        <div class="upload-title" id="upload-status-text">Click or drag file to optimize</div>
+        <div class="upload-desc">Supports PDFs, images, videos & documents</div>
+        <input type="file" id="doc-file" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.mp4,.mov,.webm" style="display: none;">
+      </div>
+    </div>
+
+    <button class="btn" id="btn-compress">
+      <span>Compress & Optimize Prompt</span>
+    </button>
+
+    <div class="banner" id="banner-message"></div>
+  </div>
+
+  <!-- 2. SAVINGS TAB -->
+  <div class="tab-panel" id="panel-analytics">
+    <div class="slider-group">
+      <div class="slider-header">
+        <span>Est. Monthly Prompt Count</span>
+        <span class="slider-val" id="volume-val">100k</span>
+      </div>
+      <input type="range" id="volume-slider" min="10000" max="500000" step="10000" value="100000">
+    </div>
+
+    <div class="metrics-grid">
+      <!-- Savings for This Prompt Card -->
+      <div class="metric-card" style="grid-column: span 2; border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.02);">
+        <span class="metric-label" style="color: var(--success); font-weight: 700;">Savings This Prompt</span>
+        <span class="metric-value" id="metric-single-savings" style="color: var(--success); font-size: 1.35rem;">$0.000000</span>
+        <span class="metric-sub" id="metric-single-breakdown" style="color: var(--text-secondary);">Before: $0.000000 | After: $0.000000</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Tokens Saved</span>
+        <span class="metric-value" id="metric-percent">0%</span>
+        <span class="metric-sub" id="metric-tokens-raw">0 tokens</span>
+        <div class="reduction-progress-container">
+          <div class="reduction-progress-bar" id="reduction-progress"></div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Monthly Savings</span>
+        <span class="metric-value" id="metric-dollars" style="color: var(--success);">$0.00</span>
+        <span class="metric-sub" id="metric-costs-breakdown">Before: $0.00 | After: $0.00</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Response Boost</span>
+        <span class="metric-value" id="metric-speedup">1.00x</span>
+        <span class="metric-sub">Faster answers</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Prompt Fidelity</span>
+        <span class="metric-value" id="metric-fidelity" style="color: #f59e0b;">100%</span>
+        <span class="metric-sub">Information match</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CHANGES TAB -->
+  <div class="tab-panel" id="panel-diff">
+    <div class="diff-container" id="diff-container">
+      <div class="diff-placeholder">
+        <span style="font-size: 1.25rem;">✂</span>
+        <span style="font-weight: 500;">No optimization history</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted);">Run compression in the Optimizer tab to see what was simplified.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    TokenTrim Extension v1.1.0 | <a href="#" id="link-options">How it works</a>
+  </div>
+
+  <script src="pdf.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

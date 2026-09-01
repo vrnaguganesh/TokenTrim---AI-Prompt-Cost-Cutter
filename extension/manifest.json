@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "TokenTrim - AI Prompt Cost Cutter",
+  "version": "1.0.0",
+  "short_name": "TokenTrim",
+  "author": "TokenTrim Team",
+  "description": "Reduces LLM API costs by pruning unnecessary filler words and redundant statements before submission.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*",
+    "https://claude.ai/*"
+  ],
+  "icons": {
+    "128": "icon128.jpg"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon128.jpg"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://claude.ai/*"
+      ],
+      "js": ["pdf.min.js", "content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["pdf.worker.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
