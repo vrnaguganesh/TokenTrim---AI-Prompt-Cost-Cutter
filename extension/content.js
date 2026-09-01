@@ -62,30 +62,31 @@ function sanitizeOptimizedPrompt(text) {
   if (!text) return '';
 
   let cleaned = text
+    .normalize('NFKC')
     .replace(/\r\n/g, '\n')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/^\s+|\s+$/g, '')
-    .replace(/^\s*[-*•>#|]+\s*/gm, '')
-    .replace(/^\s*\d+[\.)]\s*/gm, '')
-    .replace(/\s*[-–—|/\\]+\s*/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F\u200D]/gu, ' ')
+    .replace(/[#*•>\-|–—|]+/g, ' ')
     .replace(/[\[\]{}()<>]+/g, ' ')
-    .replace(/[=+_~`^%$@#&*]+/g, ' ')
-    .replace(/[:;,.!?]{2,}/g, (m) => m.charAt(0))
+    .replace(/[@#$%^&+=~`/\\]+/g, ' ')
+    .replace(/"|“|”/g, ' ')
+    .replace(/[!?.,;:]{2,}/g, (m) => m.charAt(0))
     .replace(/\s+([.,!?;:])/g, '$1')
     .replace(/([.,!?;:])\s{2,}/g, '$1 ')
     .replace(/\s{2,}/g, ' ')
     .replace(/\n\s+/g, '\n')
     .replace(/\s+\n/g, '\n')
-    .replace(/[\u2600-\u27BF]/g, ' ')
     .replace(/\s{2,}/g, ' ')
+    .replace(/[^\p{L}\p{N}\s.,!?;:'"()-]/gu, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s+([\])}])/g, '$1')
+    .replace(/([\[{])\s+/g, '$1')
     .trim();
 
-  cleaned = cleaned.replace(/([!?.,;:])\1+/g, '$1');
-  cleaned = cleaned.replace(/\s+([\])}])/g, '$1');
-  cleaned = cleaned.replace(/([\[{])\s+/g, '$1');
   cleaned = cleaned.replace(/\s*([#*•>-])\s*/g, ' ');
   cleaned = cleaned.replace(/\s{2,}/g, ' ');
+  cleaned = cleaned.replace(/\n {1,}/g, '\n');
 
   return cleaned.trim();
 }
