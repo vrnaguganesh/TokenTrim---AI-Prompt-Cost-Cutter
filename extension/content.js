@@ -58,6 +58,36 @@ function computeJaccardSimilarity(tokensA, tokensB) {
   return intersection / union;
 }
 
+function sanitizeOptimizedPrompt(text) {
+  if (!text) return '';
+
+  let cleaned = text
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+|\s+$/g, '')
+    .replace(/^\s*[-*•>#|]+\s*/gm, '')
+    .replace(/^\s*\d+[\.)]\s*/gm, '')
+    .replace(/\s*[-–—|/\\]+\s*/g, ' ')
+    .replace(/[\[\]{}()<>]+/g, ' ')
+    .replace(/[=+_~`^%$@#&*]+/g, ' ')
+    .replace(/[!?.;,]+(?=[!?.;,])/g, '')
+    .replace(/\s+([.,!?;:])/g, '$1')
+    .replace(/([.,!?;:])\s{2,}/g, '$1 ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\n\s+/g, '\n')
+    .replace(/\s+\n/g, '\n')
+    .replace(/[\u2600-\u27BF]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  cleaned = cleaned.replace(/([!?.,;:])\1+/g, '$1');
+  cleaned = cleaned.replace(/\s+([\])}])/g, '$1');
+  cleaned = cleaned.replace(/([\[{])\s+/g, '$1');
+
+  return cleaned.trim();
+}
+
 function compressPromptText(text, level = 'balanced', preserveEntities = true, customKeywords = []) {
   if (!text) return { compressedText: "", prunedWords: [] };
   let workingText = text;
@@ -647,7 +677,8 @@ function injectOptimizeButton() {
     }
     try {
       const { compressedText } = compressPromptText(originalText, 'balanced', true, []);
-      setInputValue(inputElement, compressedText);
+      const finalText = sanitizeOptimizedPrompt(compressedText);
+      setInputValue(inputElement, finalText);
       btn.innerText = '✅ Optimized';
       setTimeout(() => btn.innerText = '✂ Optimize', 2000);
     } catch (e) {
