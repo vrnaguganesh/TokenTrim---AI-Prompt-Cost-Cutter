@@ -71,7 +71,7 @@ function sanitizeOptimizedPrompt(text) {
     .replace(/\s*[-–—|/\\]+\s*/g, ' ')
     .replace(/[\[\]{}()<>]+/g, ' ')
     .replace(/[=+_~`^%$@#&*]+/g, ' ')
-    .replace(/[!?.;,]+(?=[!?.;,])/g, '')
+    .replace(/[:;,.!?]{2,}/g, (m) => m.charAt(0))
     .replace(/\s+([.,!?;:])/g, '$1')
     .replace(/([.,!?;:])\s{2,}/g, '$1 ')
     .replace(/\s{2,}/g, ' ')
@@ -84,6 +84,8 @@ function sanitizeOptimizedPrompt(text) {
   cleaned = cleaned.replace(/([!?.,;:])\1+/g, '$1');
   cleaned = cleaned.replace(/\s+([\])}])/g, '$1');
   cleaned = cleaned.replace(/([\[{])\s+/g, '$1');
+  cleaned = cleaned.replace(/\s*([#*•>-])\s*/g, ' ');
+  cleaned = cleaned.replace(/\s{2,}/g, ' ');
 
   return cleaned.trim();
 }
