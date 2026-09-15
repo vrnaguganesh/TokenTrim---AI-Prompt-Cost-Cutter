@@ -43,6 +43,15 @@ const STOPWORDS = new Set([
   'down', 'in', 'on', 'over', 'under', 'again', 'further', 'then', 'once'
 ]);
 
+function expandShortPrompt(text) {
+  const normalizedText = text.trim().replace(/\s+/g, ' ');
+  const wordCount = normalizedText ? normalizedText.split(/\s+/).length : 0;
+
+  if (wordCount === 0 || wordCount > 12) return text;
+
+  return `Task: ${normalizedText}. Goal: provide an accurate, useful answer. Include the key details, steps, and one relevant example. Format the response clearly and keep it concise.`;
+}
+
 function computeJaccardSimilarity(tokensA, tokensB) {
   const setA = new Set(tokensA.filter(t => t && !t.startsWith('__')));
   const setB = new Set(tokensB.filter(t => t && !t.startsWith('__')));
@@ -336,8 +345,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     try {
+      const textToCompress = request.expandShortPrompt
+        ? expandShortPrompt(originalText)
+        : originalText;
       const { compressedText, prunedWords } = compressPromptText(
-        originalText,
+        textToCompress,
         request.level,
         request.preserveEntities,
         request.customKeywords

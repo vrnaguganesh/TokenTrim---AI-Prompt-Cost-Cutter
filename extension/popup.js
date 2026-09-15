@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modelSelect = document.getElementById('target-model');
   const customKeywordsInput = document.getElementById('custom-keywords');
   const preserveCheckbox = document.getElementById('preserve');
+  const expandShortCheckbox = document.getElementById('expand-short');
   const compressBtn = document.getElementById('btn-compress');
   const bannerMessage = document.getElementById('banner-message');
   
@@ -63,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modelSelect.value = localStorage.getItem('cc_model') || 'gpt-4o';
     customKeywordsInput.value = localStorage.getItem('cc_keywords') || '';
     preserveCheckbox.checked = localStorage.getItem('cc_preserve') !== 'false';
+    expandShortCheckbox.checked = localStorage.getItem('cc_expand_short') !== 'false';
     volumeSlider.value = localStorage.getItem('cc_volume') || '100000';
     updateVolumeDisplay(volumeSlider.value);
   }
@@ -72,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('cc_model', modelSelect.value);
     localStorage.setItem('cc_keywords', customKeywordsInput.value);
     localStorage.setItem('cc_preserve', preserveCheckbox.checked);
+    localStorage.setItem('cc_expand_short', expandShortCheckbox.checked);
     localStorage.setItem('cc_volume', volumeSlider.value);
   }
 
@@ -304,7 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
       action: 'compress',
       level: level,
       preserveEntities: preserveEntities,
-      customKeywords: customKeywords
+      customKeywords: customKeywords,
+      expandShortPrompt: expandShortCheckbox.checked
     }, (response) => {
       resetCompressBtn();
 
