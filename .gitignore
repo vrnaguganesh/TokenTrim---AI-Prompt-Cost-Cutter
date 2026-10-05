@@ -1,0 +1,28 @@
+# Local secrets and environment files
+.env
+*.env
+!.env.example
+
+# JavaScript dependencies
+node_modules/
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Generated ML data and reports
+ml-service/data/raw/
+ml-service/data/processed/
+ml-service/data/splits/
+ml-service/reports/
+
+# Local model artifacts; publish metadata/manifests, not large binaries
+ml-service/models/*.joblib
+ml-service/models/*.bin
+ml-service/models/*.safetensors
+
+# Logs and local runtime files
+*.log

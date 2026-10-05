@@ -325,6 +325,28 @@ function findActiveInput() {
 
 // Message Listener from Popup script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'get_prompt') {
+    const inputElement = findActiveInput();
+    if (!inputElement) {
+      sendResponse({ status: 'error', message: 'No input area detected. Click inside a text box first.' });
+      return;
+    }
+    const text = inputElement.tagName === 'TEXTAREA' ? inputElement.value : inputElement.innerText;
+    sendResponse({ status: text.trim() ? 'success' : 'error', text, message: 'Prompt text is empty.' });
+    return;
+  }
+
+  if (request.action === 'set_prompt') {
+    const inputElement = findActiveInput();
+    if (!inputElement || typeof request.text !== 'string') {
+      sendResponse({ status: 'error', message: 'No input area detected.' });
+      return;
+    }
+    setInputValue(inputElement, request.text);
+    sendResponse({ status: 'success' });
+    return;
+  }
+
   if (request.action === 'compress') {
     const inputElement = findActiveInput();
     if (!inputElement) {

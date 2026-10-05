@@ -1,0 +1,29 @@
+{
+  "name": "tokentrim-backend",
+  "version": "1.0.0",
+  "description": "Production Node.js / Express Gateway for TokenTrim ML Prompt Optimization Engine",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test test/server.test.js"
+  },
+  "keywords": [
+    "prompt-optimization",
+    "token-trim",
+    "llm-cost-cutter",
+    "express",
+    "ai"
+  ],
+  "author": "TokenTrim Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "uuid": "^11.0.5"
+  }
+}

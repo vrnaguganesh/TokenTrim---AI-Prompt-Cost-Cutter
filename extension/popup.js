@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Diff Panel
   const diffContainer = document.getElementById('diff-container');
+  const API_BASE_URL = localStorage.getItem('cc_api_url') || 'http://localhost:3000/api/v1';
+  const API_TIMEOUT_MS = 6000;
 
   // State cache for last compression result
   let lastResult = null;
@@ -145,7 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // Content script not ready yet (needs page reload)
           statusText.innerText = 'Needs page reload';
           statusBadge.className = 'status-badge'; // reset styles to default (gray)
-          showBanner("Please reload the chat page once to enable TokenTrim.", "error");
+          compressBtn.disabled = false;
+          showBanner("TokenTrim is not connected to this page. Reload the AI chat tab, then try again.", "error");
         } else {
           compressBtn.disabled = false;
           hideBanner();
@@ -167,16 +170,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function recalculateMetrics() {
     if (!lastResult) return;
 
-    const originalTokens = Math.ceil(lastResult.originalLength / 4);
-    const compressedTokens = Math.ceil(lastResult.compressedLength / 4);
-    const tokensSaved = Math.max(0, originalTokens - compressedTokens);
-    const percentSaved = originalTokens > 0 ? Math.round((tokensSaved / originalTokens) * 100) : 0;
+    const originalTokens = Number.isFinite(lastResult.originalTokens)
+      ? lastResult.originalTokens
+      : Math.ceil(lastResult.originalLength / 4);
+    const compressedTokens = Number.isFinite(lastResult.optimizedTokens)
+      ? lastResult.optimizedTokens
+      : Math.ceil(lastResult.compressedLength / 4);
+    const tokensSaved = Number.isFinite(lastResult.tokensSaved)
+      ? lastResult.tokensSaved
+      : Math.max(0, originalTokens - compressedTokens);
+    const percentSaved = Number.isFinite(lastResult.reductionPercentage)
+      ? lastResult.reductionPercentage
+      : (originalTokens > 0 ? (tokensSaved / originalTokens) * 100 : 0);
 
     // Estimate costs
     const level = levelSelect.value;
     const modelKey = modelSelect.value;
     const monthlyVolume = parseInt(volumeSlider.value) || 100000;
-    const rate = MODEL_RATES[modelKey].input; // price per 1M input tokens
+    const rate = MODEL_RATES[modelKey].input; // fallback price for legacy local results
 
     const originalCost = (originalTokens * monthlyVolume / 1000000) * rate;
     const compressedCost = (compressedTokens * monthlyVolume / 1000000) * rate;
@@ -199,9 +210,16 @@ document.addEventListener('DOMContentLoaded', () => {
     reductionProgressBar.style.width = `${percentSaved}%`;
 
     // Single prompt cost calculations
-    const singleOriginalCost = (originalTokens / 1000000) * rate;
-    const singleCompressedCost = (compressedTokens / 1000000) * rate;
-    const singleSavings = Math.max(0, singleOriginalCost - singleCompressedCost);
+    const singleOriginalCost = Number.isFinite(lastResult.estimatedOriginalCost)
+      ? lastResult.estimatedOriginalCost : (originalTokens / 1000000) * rate;
+    const singleCompressedCost = Number.isFinite(lastResult.estimatedOptimizedCost)
+      ? lastResult.estimatedOptimizedCost : (compressedTokens / 1000000) * rate;
+    const singleSavings = Number.isFinite(lastResult.estimatedCostSaved)
+      ? lastResult.estimatedCostSaved : Math.max(0, singleOriginalCost - singleCompressedCost);
+    if (metricFidelity) {
+      metricFidelity.innerText = Number.isFinite(lastResult.semanticScore)
+        ? `${Math.round(lastResult.semanticScore * 100)}%` : `${Math.round(preservation)}%`;
+    }
 
     // Update single-prompt savings card
     const singleSavingsEl = document.getElementById('metric-single-savings');
@@ -303,37 +321,57 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'compress',
-      level: level,
-      preserveEntities: preserveEntities,
-      customKeywords: customKeywords,
-      expandShortPrompt: expandShortCheckbox.checked
-    }, (response) => {
-      resetCompressBtn();
-
-      if (chrome.runtime.lastError) {
-        showBanner("Make sure the page is loaded and click inside the text area first.", "error");
+    chrome.tabs.sendMessage(tab.id, { action: 'get_prompt' }, async (promptResponse) => {
+      if (chrome.runtime.lastError || !promptResponse || promptResponse.status !== 'success') {
+        resetCompressBtn();
+        showBanner(promptResponse?.message || "Active text input area not found.", "error");
         return;
       }
-
-      if (response && response.status === 'success') {
-        // Cache result
-        lastResult = response;
-
-        // Recalculate metrics
-        recalculateMetrics();
-
-        // Render diff view
-        renderVisualDiff(response.originalText, response.compressedText, response.prunedWords);
-
-        // Show banner success
-        showBanner(`Successfully compressed input!`, "success");
-
-        // Automatically click to Analytics tab to show achievements
-        document.getElementById('tab-analytics-btn').click();
-      } else {
-        showBanner(response ? response.message : "Active text input area not found.", "error");
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+        const response = await fetch(`${API_BASE_URL}/optimize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            prompt: promptResponse.text,
+            model: modelSelect.value,
+            mode: level === 'conservative' ? 'quality' : level,
+            customKeywords,
+          }),
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`TokenTrim API returned ${response.status}`);
+        const result = await response.json();
+        const accepted = result.optimizationStatus === 'accepted';
+        const text = accepted ? result.optimizedPrompt : promptResponse.text;
+        chrome.tabs.sendMessage(tab.id, { action: 'set_prompt', text }, (insertResponse) => {
+          resetCompressBtn();
+          if (chrome.runtime.lastError || insertResponse?.status !== 'success') {
+            showBanner('TokenTrim unavailable. Your original prompt was preserved.', 'error');
+            return;
+          }
+          lastResult = {
+            ...result,
+            originalText: promptResponse.text,
+            compressedText: text,
+            originalLength: promptResponse.text.length,
+            compressedLength: text.length,
+            prunedWords: [],
+          };
+          recalculateMetrics();
+          renderVisualDiff(promptResponse.text, text, []);
+          showBanner(accepted ? 'Optimization accepted.' : 'Optimization rejected; original preserved.', accepted ? 'success' : 'error');
+          document.getElementById('tab-analytics-btn').click();
+        });
+      } catch (error) {
+        resetCompressBtn();
+        const message = error.name === 'AbortError'
+          ? 'TokenTrim timed out. Your original prompt was preserved.'
+          : 'TokenTrim API unavailable. Start the backend, then try again.';
+        showBanner(message, 'error');
+        console.error('TokenTrim API optimization failed', error);
       }
     });
   });

@@ -1,0 +1,90 @@
+{
+  "classification": {
+    "accuracy": 0.8544,
+    "macroPrecision": 0.875,
+    "macroRecall": 0.8317,
+    "macroF1": 0.8499,
+    "confusionMatrix": [
+      [
+        50,
+        0,
+        5
+      ],
+      [
+        4,
+        19,
+        0
+      ],
+      [
+        6,
+        0,
+        19
+      ]
+    ],
+    "classes": [
+      "KEEP",
+      "REMOVE",
+      "COMPRESS"
+    ],
+    "perClass": {
+      "KEEP": {
+        "precision": 0.8333,
+        "recall": 0.9091,
+        "f1": 0.8696,
+        "support": 55
+      },
+      "REMOVE": {
+        "precision": 1.0,
+        "recall": 0.8261,
+        "f1": 0.9048,
+        "support": 23
+      },
+      "COMPRESS": {
+        "precision": 0.7917,
+        "recall": 0.76,
+        "f1": 0.7755,
+        "support": 25
+      }
+    }
+  },
+  "optimization": {
+    "averageTokenReduction": 6.66,
+    "medianTokenReduction": 0.0,
+    "averageSemanticSimilarity": 0.9953,
+    "minimumSemanticSimilarity": 0.9515,
+    "optimizationAcceptanceRate": 86.21,
+    "totalTokensSaved": 40,
+    "totalEstimatedCostSaved": 9.8e-05,
+    "totalEvaluatedPrompts": 29
+  },
+  "ablation": [
+    {
+      "model": "Rule-based optimizer",
+      "f1": 0.785,
+      "tokenReduction": 4.01,
+      "semanticScore": 0.9975,
+      "latencyMs": 0.31
+    },
+    {
+      "model": "TF-IDF + Logistic Regression",
+      "f1": 0.894,
+      "tokenReduction": 4.21,
+      "semanticScore": 1.0,
+      "latencyMs": 1.13
+    },
+    {
+      "model": "TF-IDF + Linear SVM",
+      "f1": 0.918,
+      "tokenReduction": 4.33,
+      "semanticScore": 1.0,
+      "latencyMs": 1.23
+    },
+    {
+      "model": "Embedding-based optimizer (TokenTrim Full)",
+      "f1": 0.941,
+      "tokenReduction": 11.2,
+      "semanticScore": 0.8674,
+      "latencyMs": 24.15
+    }
+  ]
+}

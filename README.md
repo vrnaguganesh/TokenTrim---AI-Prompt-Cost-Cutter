@@ -2,6 +2,51 @@
 
 An AI-based middleware and plugin suite designed to reduce LLM API costs by removing unnecessary, redundant, and filler information from prompts before sending them to models like Gemini, GPT, and Claude. It leverages lightweight NLP algorithms to shrink token payloads while protecting technical structures (such as code blocks, variables, URLs, and custom entities).
 
+## ML training pipeline
+
+The ML service combines `zai-org/BPO` with
+`Sudhendra/semantic-compression-sft`. Records are normalized to prompt pairs,
+measured with `cl100k_base`, validated with sentence-transformer cosine
+similarity, and split deterministically into 80% training, 10% validation, and
+10% test data. Compression is accepted only when semantic and safety checks
+pass; similarity is a validation signal, not a substitute for human review.
+
+From `ml-service` in a clean Python environment:
+
+```bash
+pip install -r requirements.txt
+python training/download_dataset.py
+python training/preprocess.py
+python training/train.py
+python training/evaluate.py
+```
+
+The processed dataset is written to
+`ml-service/data/processed/tokentrim_semantic_compression.csv`, the split CSVs
+to `ml-service/data/splits/`, model artifacts to `ml-service/models/`, and
+evaluation reports to `ml-service/reports/`. Estimated costs are calculated
+only at serving time from the configurable prices in `config/models.json`.
+
+## Production request flow
+
+The extension talks only to the Node API (`/api/v1/optimize`). The Node API
+forwards requests to the private FastAPI `POST /internal/optimize` endpoint and
+returns the validated result. The Python service also exposes `/health`,
+`/ready`, and `/model-info`. If the API, model, tokenizer, or validation fails,
+the extension keeps the original prompt and displays an unavailable/rejected
+status instead of blocking the underlying AI site.
+
+For local development, copy `.env.example` to the appropriate service
+environment and start the ML service before the backend:
+
+```bash
+docker compose up --build
+```
+
+The ML service is not published as a host port by Compose; only the Node API is
+publicly exposed. Set `ML_INTERNAL_TOKEN` to the same non-secret development or
+deployment value in both services when enabling internal authentication.
+
 ---
 
 ## 📂 Project Structure

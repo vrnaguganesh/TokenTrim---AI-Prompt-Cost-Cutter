@@ -1,0 +1,18 @@
+{
+  "algorithm": "TF-IDF + Logistic Regression",
+  "accuracy": 0.6916,
+  "macroF1": 0.4888,
+  "models_compared": {
+    "logistic_regression": {
+      "accuracy": 0.6916,
+      "macroF1": 0.4888
+    },
+    "linear_svm": {
+      "accuracy": 0.7827,
+      "macroF1": 0.2968
+    }
+  },
+  "dataset": "zai-org/BPO + Sudhendra/semantic-compression-sft",
+  "training_split": "C:\\Users\\muthu\\Documents\\TokenTrim - AI Prompt Cost Cutter  ZIP\\TokenTrim - AI Prompt Cost Cutter\\ml-service\\data\\splits\\train.csv",
+  "validation_split": "C:\\Users\\muthu\\Documents\\TokenTrim - AI Prompt Cost Cutter  ZIP\\TokenTrim - AI Prompt Cost Cutter\\ml-service\\data\\splits\\validation.csv"
+}

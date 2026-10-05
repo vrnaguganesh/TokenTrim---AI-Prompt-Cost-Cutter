@@ -1,0 +1,100 @@
+{
+  "defaultModel": "gpt-4o",
+  "models": {
+    "gpt-4o": {
+      "name": "OpenAI GPT-4o",
+      "provider": "openai",
+      "tokenizer": "o200k_base",
+      "inputPricePerMillionTokens": 2.50,
+      "outputPricePerMillionTokens": 10.00
+    },
+    "gpt-4o-mini": {
+      "name": "OpenAI GPT-4o Mini",
+      "provider": "openai",
+      "tokenizer": "o200k_base",
+      "inputPricePerMillionTokens": 0.15,
+      "outputPricePerMillionTokens": 0.60
+    },
+    "gpt-4-turbo": {
+      "name": "OpenAI GPT-4 Turbo",
+      "provider": "openai",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 10.00,
+      "outputPricePerMillionTokens": 30.00
+    },
+    "claude-3-5-sonnet": {
+      "name": "Anthropic Claude 3.5 Sonnet",
+      "provider": "anthropic",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 3.00,
+      "outputPricePerMillionTokens": 15.00
+    },
+    "claude-3-haiku": {
+      "name": "Anthropic Claude 3 Haiku",
+      "provider": "anthropic",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 0.25,
+      "outputPricePerMillionTokens": 1.25
+    },
+    "gemini-1.5-pro": {
+      "name": "Google Gemini 1.5 Pro",
+      "provider": "google",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 1.25,
+      "outputPricePerMillionTokens": 5.00
+    },
+    "gemini-1.5-flash": {
+      "name": "Google Gemini 1.5 Flash",
+      "provider": "google",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 0.075,
+      "outputPricePerMillionTokens": 0.30
+    },
+    "model-a": {
+      "name": "Standard LLM tier A",
+      "provider": "generic",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 1.00,
+      "outputPricePerMillionTokens": 3.00
+    },
+    "model-b": {
+      "name": "Economy LLM tier B",
+      "provider": "generic",
+      "tokenizer": "cl100k_base",
+      "inputPricePerMillionTokens": 0.50,
+      "outputPricePerMillionTokens": 1.50
+    }
+  },
+  "modes": {
+    "aggressive": {
+      "name": "Aggressive",
+      "minSemanticScore": 0.88,
+      "targetTokenReductionMin": 30.0,
+      "targetTokenReductionMax": 50.0,
+      "removeFiller": true,
+      "removePoliteness": true,
+      "compressVerbose": true,
+      "allowStructuralSummarization": true
+    },
+    "balanced": {
+      "name": "Balanced",
+      "minSemanticScore": 0.92,
+      "targetTokenReductionMin": 20.0,
+      "targetTokenReductionMax": 35.0,
+      "removeFiller": true,
+      "removePoliteness": true,
+      "compressVerbose": true,
+      "allowStructuralSummarization": false
+    },
+    "quality": {
+      "name": "Quality",
+      "minSemanticScore": 0.96,
+      "targetTokenReductionMin": 10.0,
+      "targetTokenReductionMax": 20.0,
+      "removeFiller": true,
+      "removePoliteness": true,
+      "compressVerbose": false,
+      "allowStructuralSummarization": false
+    }
+  }
+}
